@@ -1225,22 +1225,210 @@ Thus far we've coded the Occupancy Grid Mapping Algorithm in C++ and generated a
 Using a GPU enable workspace (Ubuntu 16.04)
 
 Clone the Lab from Github
+---
 
 ``` shell
 $ cd /home/workspace
 $ git clone https://github.com/udacity/RoboND-OccupancyGridMappingAlgorithm
 ```
 
+Edit ```main.cpp```
+---
 
+Now we will code the visualization function which will plot the state of each grid cell using the matplotlib pythin library 
 
+``` cpp
 
+void visualization()
+{
+    //TODO: Initialize a plot named Map of size 300x150
+
+    //TODO: Loop over the log odds values of the cells and plot each cell state. 
+    //Unkown state: green color, occupied state: black color, and free state: red color 
+
+    //TODO: Save the image and close the plot 
+}
+```
+
+Belwo are useful commands that can be used to generate plots with the ``matplotlib`` library: 
+
+Set Title:
+
+```cpp
+plt::title("Your Title");
+```
+Set Limits:
+
+``` cpp
+plt::xlim(x-axis lower limit, x-axis upper limit );
+```
+
+Plot Data:
+
+``` cpp
+plt::plot({ x-value }, { y-value }, "Color and Shape");
+```
+
+Save Plot: 
+
+```cpp
+plt::save("File name and directory");
+```
+
+Close Plot: 
+
+```cpp
+plt::clf();
+```
+ Here is a link for more information on the [matplotlib](https://github.com/lava/matplotlib-cpp) C++ library. 
+ 
+ Compile the program
+ ---
+ 
+ ``` shell
+ 
+ $ cd RoboND-OccupancyGridMappingAlgorithm/
+$ rm -rf Images/* #Delete the folder content and not the folder itself!
+$ g++ main.cpp -o app -std=c++11 -I/usr/include/python2.7 -lpython2.7
+
+```
+
+Run the program
+---
+
+``` $ ./app 
+```
+
+The program will generate the map and store it in the ```/home/workspace/RoboND-OccupancyGridMappingAlgorithm/Images ``` drectory.
 
 # Multi-sensor Fusion 
 
+Thus far we've covered mapping for robots with only one sensor i.e an ultra-sonic sensor or LIDAR sesnor or even an RGB-D sensor. Most times, mobile robots are equipped with a combination of these sensors. Mapping with a mobile robot equipped with a combination of these senors lead to a more precise map. An important question arises, how can we combine the information from a LIDAR and RGB-D sensor or any other combination into a single map?
+
+It would be convenient to implement the Occupancy Grid Mapping Algorithm and solve for each sensor model. However, this approach is ineffective because each sensor has different characteristics. Additionally, sensors are sensitive to different obstacles. 
+
+An RGB-D camera might detect an obstacle at a particular location but that same object might not be seen by the laser beams of a LIDAR, thus the LIDAR will process it as a free space. The most optimal approach to the **multi-sensor fusion** problem is to build seerate maps for each sensor type independently of each other and then integrate them. 
+
+Below we have 2 independent 2x2 maps created by each sensor.
+
+[image7]
+
+Both maps do not look the same, despite being in the same environment, since each sensor has a different sensitivity. Let's denote the map built by the **kth** sensor as **m_k** and combine the maps. If the measurements are independent of each other, we can easily comnine the maps using **De Morgan's Law**
+
+[image8]
+
+The resultant map now combines the estimated occupany values of each cell. To obtain the most likely map, we need to compute the maximum value of each cell. An alternate approach would be to perform a null operation between values of each cell. The resulting map now perfectly combines the measurement from different sensors.
+
+Given two maps **m1** and **m2**
+
+map1
+--
+0.9 0.6
+0.1 0.5
+
+map2
+--
+0.3 0.4
+0.4 0.3
+
+We'll apply sensor fusion to combine the measurement of **m1** and **m2** in a resulting map. The sensorFusion() function takes the following form:
+
+```cpp
+
+void sensorFusion(double m1[][mapWidth], double m2[][mapWidth])
+{
+}
+
+```
+
+Below is the full implementation
+
+```cpp
+
+#include <iostream>
+#include <math.h>
+using namespace std;
+
+const int mapWidth =  2;
+const int mapHeight = 2;
+
+void sensorFusion(double m1[][mapWidth], double m2[][mapWidth])
+{
+    for (int x = 0; x < mapHeight; x++) {
+        for (int y = 0; y < mapWidth; y++) {
+            double p = 1 - (1 - m1[x][y]) * (1 - m2[x][y]);
+            cout << p << " ";
+        }
+        cout << endl;
+    }
+}
+
+int main()
+{
+
+    double m1[mapHeight][mapWidth] = { { 0.9, 0.6 }, { 0.1, 0.5 } };
+    double m2[mapHeight][mapWidth] = { { 0.3, 0.4 }, { 0.4, 0.3 } };
+    sensorFusion(m1, m2);
+
+    return 0;
+}
+
+```
+
 # 3D Mapping 
 
+So far we've only dealt with 2D maps describing a slice of the 3D world. In a resource constrained system, it can be very cimputationally expensive to maintain these maps. 3D maps are even more costly! Robots live in a 3D world, and we want to represent that world and the 3D structures within it as accurately and reliably as possible. 3D mapping would give us the most reliable collision avoidance, and motion and path planning especially for flying robots or mobile robots with manipulators. 
+
+1. How to collect 3D data?
+2. How is the data represented? 
+
+To create 3D maps, robots sense the environment by taking 3D range measurements. This can be accomplished with:
+
+* 3D lidar- a single sensor with an array of laser beams stacked horizontally. Alternatively, a 2D lidar can be titled (hotizontally moving up and down) or rotated (360 degrees to obtain 3D coverage.
+
+* RGB-D Camera - is a single visual camera combined with a laser rangefinder or infrared depth sensor. It allows the robot to determine the depth of the image and ultimatley the distance from an object. A stereo camera is a pair of offset cameras and can be used to directly infer the distance of close object, similar to the way humans do with their two eyes. 
+
+A single camera system is cheaper and smaller, but the software algorithms needed for monocular SLAM are much more complex. Depth cannot be directly inferred from the sensor data of a single image from a single camera. Instead, it is calculated by analysing data from a sequence of frames in a video. 
 
 # 3D Data Representations 
 
+Here we discuss how to represent 3D data, and the desired characteristics of an optimal representation. Probabalistic data representations can be used to accomodate for sensor noise and dynamic environments. It is important to be able to distinguish data that represents and area that is free space vs an area that is unknown or not yet mapped. This will allow the robot to plan an unobstructed path and build a complete map. 
+
+Memory on a mobile robot is typically a limited resource. Allocating memory efficiently is very important! The map should also be accessible in the robot's main memory while mapping a large area over a long period of time. To accomplish this, we need a data representation that is compact and allows for efficient updates and queries. Some data representations of 3D environments that we will encounter are:
+
+* Point clouds - a set of data points corresponding to range measurements, each defined by x, y, z coordinates. A disadvantage of point cloud data is that the information only exists about where things are in the world. The data looks the smae whether the space is unoccupied or unknown. They can store a large amount of measurement points. This means, that with each scan, we will need to allocate more memory. Therefore, point cloud data is not memory-efficient. 
+
+* Voxels - a volumetric data representation using a grid of cubic volumes of equal size (ie the probabilistic representation.) Therefore, we can estimate whether the voxel gird is occupied, free, or unknown space. One disadvantage of  a 3D voxel grid is that the size of the area must be known or approximated before the measurement, which is not always possible. Another disadvantage is that the complete map must be allocated in memory. Therefore, the overall memory requirement is high. 
+
+* Octrees - memory efficient tree based data representations. In the image below, we see a volumetric representation (on the left) and the tree-based representation (on the right). These trees can e dynamically expaned to different resolutions and different areas where every voxel can be subdivided into 8 voxels recursively. The size of the map does not need to be knwon beforehand because mapped volumes aren't initialized until the robot needs to add new measurements. Octrees have been used to adapt occupancy grid mapping from 3D to 3D by introducing a probabilistic representaion of occupied vs freespace
+
+
+
+Desired characteristics of an optimal representation
+---
+* Probabilistic data representations can be used to accommodate for sensor noise and dynamic environments.
+
+* It is important to be able to distinguish data that represents an area that is free space versus an area that is unknown or not yet mapped. This will enable the robot to plan an unobstructed path and build a complete map.
+
+* Memory on a mobile robot is typically a limited resource, so memory efficiency is very important. The map should also be accessible in the robot’s main memory, while mapping a large area over a long period of time. To accomplish this, we need a data representation that is compact and allows for efficient updates and queries.
+ 
+ Further studying elevation maps and multilevel surface maps can be accomplished starting with the information given below: 
+
+2.5D maps, also known as height maps, store the surface of the entire environment as the maximum height measured at every point. They are memory efficient, with constant access time. This type of mapping is not very useful if you have terrain with trees or overhang structures, where the robot could move underneath. Also, height maps are non-probabilistic. Similar to point clouds, there is also no distinction between free and unknown space.
+
+Elevation maps are 2D grids that store an estimated height, or elevation, for each cell. A Kalman filter is used to estimate the height, and can also incorporate the uncertainty of the measurement process itself, which typically increases with the measured distance. One problem with elevation maps is the vertical wall - you can tell there is a vertical object but don’t know exactly how tall it is.
+
+Extended elevation maps store a set of estimated heights for every cell, and include cells that contain gaps. You can check whether the variance of the height of all data points within each cell is large. If so, you can investigate whether the corresponding set of points contains a gap exceeding the height of the robot (known as a “gap cell”), and ultimately use gap cells to determine traversability.
+
+In multi-level surface (MLS) map representations, each 2D cell stores “patches”, of which there can be multiple per cell. Each patch contains 3 key pieces of information - the height mean, the height variance, and the depth value. The height mean is the estimated height of the individual vertical area, also referred to as an interval. The uncertainty of the height is stored as the height variance, with the assumption that the error is represented by a Gaussian distribution. The depth value is defined by the difference between height of the surface patch and the height of the lowest measurement that is considered as belonging to that vertical object (ex the depth of the floor would be 0). Individual surfaces can be directly calculated, allowing the robot to deal with vertical and overhanging objects. This method also works very well with multi-level traversable surfaces, such as a bridge that you could travel over top of, or underneath, or a structure like a parking garage. An MLS map isn’t a volumetric representation, but a discretization in the vertical dimension. Unknown areas are not represented, and localization for this method is not straightforward.
+
 
 # Octomap 
+
+We've covered some 3D data representation previously, now we'll move on to an implementation. The OctoMap framework is an open-source C++ library and ROS package based on Octrees and it can be used to generate volumetric 3D models. Keep in mind that OctoMap is not a 3D slim solution. Instead,it is the mapping framework and requires a pose estimate. It converts and integrates point clouds into 3D occupancy maps. OctMap uses a probabilistic occupancy estimation modeled as a recursive Binary Bayes filter. 
+
+The Binary Bayes Filter is a static state filter which assumes the environment doesn't change. Efficient updates are achieved using the log odds notation. Occupancy is represented volumetrically with modeling of free, occupied and unmapped areas. 
+
+Upper and lower bounds are placed on the log-odds value of the occupancy estimate. Theis policy limits the number of updates required to change the state of the voxel. Octomap supports multi-resolution map queries, where the minimum voxel size determines the resolution. Tree pruning is also used to reduce redundant information between discrete occupancy states. Pruning is accomplished by defining a threshold probability that the voxel is occupied or free. Children that are identical to the parent in the tree can be pruned. 
+
+Memory efficient representation is accomplished using a compression method that produces compact map files. Coherent map volumes are locally combined, including both mapped free areas and occupied space. 
