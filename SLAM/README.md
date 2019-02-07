@@ -56,8 +56,10 @@ Integrating the previous poses from the Full SLAM problem, one at a time, we can
 
 Nature of SLAM
 --
+SLAM problems have a continuous and discrete nature:
 
-
+### Continuous Nature
+During SLAM, a robot continuously collects odometry information to estimate the robot poses and continuously
 Correspondence
 
 
