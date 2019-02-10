@@ -549,30 +549,257 @@ The completed graph, with all of its labelled constraints can be seen as follows
 
 The task is to now minimize the sum of all constraints:
 
+<a href="https://www.codecogs.com/eqnedit.php?latex=J_{GraphSLAM}=\frac{(z_1-7)^2}{\sigma^2}&space;&plus;&space;\frac{(x_1-(x_{0}&plus;10)^2}{\sigma^2}&space;&plus;&space;\frac{(z_1-(x_{1}-4))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?J_{GraphSLAM}=\frac{(z_1-7)^2}{\sigma^2}&space;&plus;&space;\frac{(x_1-(x_{0}&plus;10)^2}{\sigma^2}&space;&plus;&space;\frac{(z_1-(x_{1}-4))^2}{\sigma^2}" title="J_{GraphSLAM}=\frac{(z_1-7)^2}{\sigma^2} + \frac{(x_1-(x_{0}+10)^2}{\sigma^2} + \frac{(z_1-(x_{1}-4))^2}{\sigma^2}" /></a>
+
+
+To do this, we will need to take the first derivative of the function and set it equal to zero. Because there are two variables, *Partial Derivatives* 
+
+Optimization with Non-Trivial Variances
+---
+
+No we'll take into consideration the variances of each measurement and motion. Our robot has the fanciest wheels on the market - they’re solid rubber (they won’t deflate at different rates) - with the most expensive encoders. But, it looks like the funds ran dry after the purchase of the wheels - the sensor is of very poor quality.
+
+We can redo the math with the following variances
+
+Motion variance: 0.02,
+Measurement variance: 0.1
+
+z_1 = 6.54 
+x_1 = 10.09
 
 
 
+At this point we've only seen 3 constraints this process would be more difficult if had collected measurement and motion data over a period of half-an hour. This is more typical for a real-life environment. Solving the system analytically has the advantage of finding the *correct andswer*. In doing so, we require a lot of computational resources, espeically as we transition to multi-dimensional problems with complex probability distributions. Solcing the problem numerically allows for a solution to be found quickly, however its accuracy may be sub-optimal. 
 
 Numerical Solution to MLE 
 --
 
-Mid-Lesson Overview 
+The method that we applied in the previous two examples was very effective at finding solutions quickly. In more complicated problems, finding the analytical solution may involved lengthy computations. The numerical solutions to maximum likelihood problems can be found in a fraction of the time. 
+
+Numerical Solution
+---
+
+The graph of the error function from the previous example is seen below. In this example it is very easy to see where the global minimum is located. In a more complicated example with multiple dimensions, this is not as easy. 
+
+[image012]
+
+This Minimum Likelihood Estimation can be solved numerically by applying an optimization algorithm. The goal of an optimiziation algorithm is to speedily find the optimal solution, in this case, the local minimum. There are several different algorithms that can tackle this problem in SLAM:
+
+* Gradient Descent
+* Levenerg-Marquardt
+* Conjugate gradient 
+
+Graident Descent 
+
+The gradient of a function is a vector that points in the direction of the greatest rate of change; or in the case on an extrema, is equal to zero. 
+
+In gradient descent, we make an initial guess and then adjust it incrementally in the direction opposite the gradient. Eventually, we will reach a minimum of the function. 
+
+This algorithm is not always perfect. In complex distribution the initial guess can change the end result significantly. Depending on the intiial guess the algorithm converges on two different local minima. The algorithm has no way to determine where the global minimum is, it naively moves down the steepest slope and when it reaches a local minima, it considers its task complete. The solution we used previously is [Stochastic Gradient Descent(SDG)](https://classroom.udacity.com/nanodegrees/nd209/parts/c199593e-1e9a-4830-8e29-2c86f70f489e/modules/cac27683-d5f4-40b4-82ce-d708de8f5373/lessons/a4a80417-00cb-4a9c-8cc4-3a091414baa2/concepts/63798118390923) 
+
+
+1-D to n-D Graphs 
 --
 
-1-D to n-D 
+1-D Graphs
 --
+In teh previous example we worked with 1-D graphs. The robot's motion and measurements were limited to one dimension i.e  the could only be performed either forwards or backwards. 
+
+In such a case each constraint could be represented in the following form, 
+
+1-D Measurement constraint: <a href="https://www.codecogs.com/eqnedit.php?latex=\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}" title="\frac{(x_t-(x_{t-1}+u_t))^2}{\sigma^2}" /></a>
+
+1-D Motion constraint: <a href="https://www.codecogs.com/eqnedit.php?latex=\frac{(z_t&space;-(x_{t-1}&plus;u_t))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{(z_t&space;-(x_{t-1}&plus;u_t))^2}{\sigma^2}" title="\frac{(z_t -(x_{t-1}+u_t))^2}{\sigma^2}" /></a>
+
+n-Dimensional Graphs 
+---
+
+In multi-dimensional systems, we must use matrices and covariances to represent the constraints. This generalization can be applied to system of 2-D, 3-D and really any n-number of dimensions. The equations for the constriants would look like so,
+
+n-D Measurement constraint: <a href="https://www.codecogs.com/eqnedit.php?latex=(z_t-h(x_t,m_j))^{T}Q_{t}^{-1}(z_t-h(x_t,m_j))" target="_blank"><img src="https://latex.codecogs.com/gif.latex?(z_t-h(x_t,m_j))^{T}Q_{t}^{-1}(z_t-h(x_t,m_j))" title="(z_t-h(x_t,m_j))^{T}Q_{t}^{-1}(z_t-h(x_t,m_j))" /></a>
+
+n-D Motion constraint: <a href="https://www.codecogs.com/eqnedit.php?latex=(x_t-g(u_t,x_{t-1}))^{T}R_{t}^{-1}(x_t-g(u_t,x_{t-1}))" target="_blank"><img src="https://latex.codecogs.com/gif.latex?(x_t-g(u_t,x_{t-1}))^{T}R_{t}^{-1}(x_t-g(u_t,x_{t-1}))" title="(x_t-g(u_t,x_{t-1}))^{T}R_{t}^{-1}(x_t-g(u_t,x_{t-1}))" /></a>
+
+Where h() and g() represent the measurement and motion functions
+
+Q_t and R_t are the covariances of the measurement and motion noise. These naming conventions are the same as the where in the [Localization](link) sections. 
+
+The multi-dimensional formula for the sum of all constraints is presented below:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=J_{GraphSLAM}=x_{0}^{T}\Omega&space;x_0&space;&plus;&space;\sum_t(x_t&space;-g(u_t,x_{t-1}))^{T}R_t^{-1}(x_t-g(u_t,&space;x_{t-1}))&plus;\sum_t(z_t-h(x_t,m_j))^{T}Q_t^{-1}(z_t-h(x_t,m_j))" target="_blank"><img src="https://latex.codecogs.com/gif.latex?J_{GraphSLAM}=x_{0}^{T}\Omega&space;x_0&space;&plus;&space;\sum_t(x_t&space;-g(u_t,x_{t-1}))^{T}R_t^{-1}(x_t-g(u_t,&space;x_{t-1}))&plus;\sum_t(z_t-h(x_t,m_j))^{T}Q_t^{-1}(z_t-h(x_t,m_j))" title="J_{GraphSLAM}=x_{0}^{T}\Omega x_0 + \sum_t(x_t -g(u_t,x_{t-1}))^{T}R_t^{-1}(x_t-g(u_t, x_{t-1}))+\sum_t(z_t-h(x_t,m_j))^{T}Q_t^{-1}(z_t-h(x_t,m_j))" /></a>
+
+
+The first element is in the sum is the initial constrain. It sets the first robot pose to equal to the origin of the map. The covariance, <a href="https://www.codecogs.com/eqnedit.php?latex=\Omega_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Omega_0" title="\Omega_0" /></a>, represents compplete confidence: 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\Omega_0=\begin{bmatrix}&space;\infty&space;&0&space;&0&space;\\&space;0&&space;\infty&space;&0&space;\\&space;0&&space;0&space;&&space;\infty&space;\end{bmatrix}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Omega_0=\begin{bmatrix}&space;\infty&space;&0&space;&0&space;\\&space;0&&space;\infty&space;&0&space;\\&space;0&&space;0&space;&&space;\infty&space;\end{bmatrix}" title="\Omega_0=\begin{bmatrix} \infty &0 &0 \\ 0& \infty &0 \\ 0& 0 & \infty \end{bmatrix}" /></a>
+
 
 Information Matrix and Vector 
 --
+Since we are working with mulit-dimensional graph and multi-dimensional constraints, we shift gears to a more intelligent data structure to work with our data.
+
+The **Information Matrix** and **Information Vector** are two data structures that are used to store information from our constraints. 
+
+Information Matrix - <a href="https://www.codecogs.com/eqnedit.php?latex=\Omega" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Omega" title="\Omega" /></a>
+
+Information Vector - <a href="https://www.codecogs.com/eqnedit.php?latex=\xi" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\xi" title="\xi" /></a>
+
+The information matrix is the inverse of the co-variance matrix i.e higher certianity is represented with larger values in the information matrix; which is the opposite of the [covariance matrix](link) where complete certainity is represented by zero. 
+
+The Matrix and vector hold  all of the poses and all of the features in the environment. Every off-diagonal cell in the matrix is a **link** between:
+
+* Two poses
+* A pose and a feature
+* Two Features 
+
+When no information is available about a link the cell has a value of zero. 
+
+The information matrix and information vector exploit the additive property of the negative log likelihoods of constraints. For a system with linear measurement and motion models, the constriants can be populated into the information matrix and information vector in an additive manner. 
+
+Below we see the start of a graph constructed by a robot as it moved around some environment. This graph contains 5 constraints:
+[image013]
+
+* 1 Initial Constraint
+* 2 Motion Constraints 
+* 2 Measurement Constraints
+
+This graph will be used to demonstrate at a high level how the information matrix and vector can be populated. To begin with, they are populated successively with each constraint. 
+
+The initial constraint will tie the pose x_0 to a value, usually zero. This constraint will populate one cell in the information matrix, and on in the information vector. 
+
+Next, we examine the motion constriant between x_0 and x_1. 
+
+A motion constraint will tie together two robot poses populating four cells in the matrix and two in the vector. 
+
+Below are the cells that relate x_0 and x_1 to each other:
+[image014]
+
+Similarly, a measurment constraint will update four cells in the matrix and two in the vector. These are the cells that relate the feature to the pose from which it was measured, in this case m_1 to x_1. 
+
+As state previously, the new formation supplied to the matrix and cector is additive. Continuing on....
+
+The next constraint ties together poses x_1 and x_2 and the following constraint ties feature m_1 to the pose x_2. 
+
+Once every constraint has been added to the information matrix and information vector, it is considered to be populated. It is common for the number of poses and features to be in the thousands or even tens of thousands. 
+
+The information matrix is considered sparse because most off-diagonal elements are zero, since there is no relative information to tie them together. This sparsity is very valuable when it comes to solveing the systems of equations that is embedded into the information matrix and vector. 
+
+
+Summary: 
+
+* A motion constraint ties together two poses
+* A measurement constraint ties together the feature and the pose from which is was measured
+* Each operation updates 4 cells in the information matrix and 2 cells in the information vector
+* All other cells remain 0. Matrix is called ‘sparse’ due to large number of zero elements
+* Sparsity is a very helpful property for solving the system of equations
+
 
 Inference 
 --
 
+Once the information matrix and information vector hve been populated, the path and map can be recovered by the following operation:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;=\Omega^{-1}\xi" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;=\Omega^{-1}\xi" title="\mu =\Omega^{-1}\xi" /></a>
+
+The result is a vector (mue) defined over all the poses and features, containing the best estimate for each. This operation is very similar to what we encountered previously in the simple 1-D case. This time we add an additional structure. Same as before, all constrints are considered when computing the solution. 
+
+Completing the above operation requires solving a system of equations. In small system, this is an easily realizable task, but as the size of the graph and matrix grows, computational efficieny becomes a big concern. 
+
+The efficiency of this operation, specifically the matrix inversion, depends greatly on the **topology** of the system. 
+
+
+Linear Graph
+---
+
+If the robot moves through the environment once without ever returning to a previously visited location, the topology is linear. Such a graph will produce a rather sparse matrix that with some effort, can be reordered to move all non-zero elements to near the diagonal. This will allow the above equation to be completed in linear time. 
+
+Cyclical Graph
+---
+
+A more common topology is *cyclical* i.e the robot revisits a location that it has been to before, after some time has passed. In such a case, features in the environment will be linked to multiple poses, ones that are not consecutive, but spaced far apart. The further apart in time that these poses are, the more problematic. This is because such a martix cannot be reordered to move non-zero cells closer to the diagonal. The results is a matrix that is more computationally challengeing to recover. 
+
+Variable Elimination
+---
+
+A variable elimination algorithm can be used to simplify the matrix, allowing for the inversion and product to be computer quicker. 
+
+We apply variable elimination iteratively to remove all cyclical constraints. Variable elimination entails removing a variable (for example a feature) entirely from the graph and matrix. This can be done by adjusting existing links or ading new links to accommodate for the links that will be removed.
+
+Recalling our spring analogy, variable elimination removes features, but keeps the *net* forces in the springs unaltered by adjusting the tension on other springs or adding new springs where needed. 
+
+This process is demonstrated in the following two images:
+
+**image 1** - The first image shows the grah, matrix, and vector as they where presented previously.
+
+[image015]
+
+
+**image 2** - The second image shows the elimation of m_1. In this process, the matrix will have five cells reset to zero (indicated in red), and four cells will have their values adjusted (indicated in green) to accommodate the variable elimination. Similarly, the information vector will have one cell removed and two adjusted.
+
+[image016]
+
+This process is repeated for all of the features, and in the end the matrix is defined over all robot poses. At this point, the same procedure as before can be applied <a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;=\Omega^{-1}\xi" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;=\Omega^{-1}\xi" title="\mu =\Omega^{-1}\xi" /></a>
+
+Performing variable elimination on the information matrix/vector prior to performing inference is less computationally intense than attempting to solve the infernce problem directly on the unaltered data. 
+
+In practice, the analytical inference method described above is seldom applied, because numerical methods are able to converge on a sufficiently accurate estimate in a fraction of the time. 
+
 Nonlinear Constraints 
 --
+Before we talk about the numerical methods, which are better because they are able to converge on a sufficiently accurate estimate in a fraction of the time, we explore how nonlinear constraints are handled in GraphSLAM. 
 
-Graph-SLAM at a Glaance 
---
+When we talked about [Localization](link2) we were introducted to nonlinear motion and measurement models. The idea that a robot only moves in a linear fashion is very limiting. Therefore, it was mportant to understand how to work with nonlinear models. In localization, nonlinear models couldn't be applied directly, as they would have turned the Gaussian distribution into a much more complicated distribution that couldnt be computed in closed form (analytically, in a finite number of steps) 
+
+This is also true of nonlinear models in SLAM- most motion and measurement constraints are nonlinear and must be linearized before they can be added to the information matrix and information vector. Otherwise, it would be impractical, if not impossible to solve the systems of equations analytically. 
+
+Luckily, we will be able to apply the same procedure that we learned in the [EK](link3) lesson to lineaeize nonlinear constraints for SLAM. 
+
+If you recall, a Taylor Series approximates a function using the sum of an infinite number of terms. A linear approximation can be computed by using only the first two terms and ignoring all higher order terms. In multi-dimensional models, the first derivative is replaced by a **Jacobian** 
+
+*Jacobian* - A matrix of partial derivative.
+
+Linearizing Constraints
+---
+A linearization of the measurement and motion constraints is the following 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=g(u_t,x_{t-1})\simeq&space;g(u_t,&space;\mu_{t-1})&plus;&space;G_t(x_{t-1}-\mu_{t-1})" target="_blank"><img src="https://latex.codecogs.com/gif.latex?g(u_t,x_{t-1})\simeq&space;g(u_t,&space;\mu_{t-1})&plus;&space;G_t(x_{t-1}-\mu_{t-1})" title="g(u_t,x_{t-1})\simeq g(u_t, \mu_{t-1})+ G_t(x_{t-1}-\mu_{t-1})" /></a>
+
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=h(y_t)\simeq&space;h(\mu_t)&plus;H_{j}^{i}(y_t-\mu_t)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?h(y_t)\simeq&space;h(\mu_t)&plus;H_{j}^{i}(y_t-\mu_t)" title="h(y_t)\simeq h(\mu_t)+H_{j}^{i}(y_t-\mu_t)" /></a>
+
+
+To linearize each constraint, we need a value for <a href="https://www.codecogs.com/eqnedit.php?latex=\mu_{t-1}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu_{t-1}" title="\mu_{t-1}" /></a> or <a href="https://www.codecogs.com/eqnedit.php?latex=\mu_{t}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu_{t}" title="\mu_{t}" /></a> to linearize about. This value is important since the linearization of a nonlinear function can change significantly depending on which value we choose to do so about. 
+
+A reasonable estimate for <a href="https://www.codecogs.com/eqnedit.php?latex=\mu_{t-1}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu_{t-1}" title="\mu_{t-1}" /></a> or <a href="https://www.codecogs.com/eqnedit.php?latex=\mu_{t}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu_{t}" title="\mu_{t}" /></a> :
+
+When presented with a completed graph of nonlinear constraints, you can apply only the motion constraints to create a pose estimate, [x_0.....x_t]^T and use this primitive estimate in place of mue to linearize all of teh constraints. Then, onve all of the constraints are linearized and added to the matrix and vector, a solution can be computed as before, using <a href="https://www.codecogs.com/eqnedit.php?latex=\mu=\Omega^{-1}\xi" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu=\Omega^{-1}\xi" title="\mu=\Omega^{-1}\xi" /></a>
+
+This solution is unlikely to be an accurate solution. The pose vector used for linearization will be erroneous, since applying just the motion constraints will lead to a graph with a lof of drift, as errors accumulate with every motion. Errors in this initial pose vector will propagate through the calculations and affect the accuracy of the end result. This is especially so because the errors may increase in magnitude significantly during a poorly positioned linearization (where the estimated mu_t is far from reality, or the estimated mu_t lies on a curve where a small step in either direction will make a big difference. 
+
+To reduce this error, we repeat the linearization process several times, each time using a better and better estimate to linearize the constraints about.
+
+Iterative Optimization
+---
+
+The first iteration will see the constraints linearized about the pose estimate created using solely motion constraints. Then, the system of equations will be solved to produced a solution, mu. 
+
+The next iteration will use this solution, mu as the estimate used to linearize about. The thought that this estimate would be a little better thant the previous, takes into account the measurement constraints too. 
+
+This process continues, with all consequent iterations using the previous solution as the vector of poses to linearize the constraints about. Each solution incrementally improves on the previous, and after some number of iterations the solution converges. 
+
+Summary
+---
+Nonlinear constraints can be linearized using Taylor Series, but this will most certainly introduce some error. To reduce this error, the linearization of every constraint must occur as close as possible to the true location of the pose or measurment relating to the constraint. To accomplish this, an iteative solution is used, wheree the point of linearization is improved with every iteration. After several iterations, the results, mu, becomes a much more reasonable estimate for teh true locations of all robot poses and features. 
+
+The workflow for GraphSLAM is summarized as follows:
+
+* Collect data, create graph of constraints,
+* Until convergence:
+  * Linearize all constraints about an estimate, μ and add linearized constraints to the information matrix & vector,
+Solve system of equations using 
+μ = Ω^(−1)*ξ 
+
+
 
 Intro to 3D SLAM with RTAB-Map 
 --
