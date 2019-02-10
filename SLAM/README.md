@@ -287,20 +287,150 @@ SLAM with ROS
 
 
 
+[images01]
+
+
+
+
 # GraphSLAM 
 
+GraphSLAM is SLAM algorithm that solves the FullSLAM problem. The algorithm recovers the **entire path and map** instead of just the most recent pose and map. This technique allows the robot to consider depenedencies betweencurrent and previous poses. Consider an example situation where a miner robot is informed of an accident in the mines. The most recent map that is stored in the robot's memory is likely to be no longer correct due to environmental changes. However, the robot is equipped with a LIDAR sensor so it travels around the environment collecting data about the surroundings. The data is then analyzed to create an accurate map of the environment. 
+
+Benefits of this algorithm
+---
+
+1. Reduced need for significant onboard processing capability. 
+2. Improve accuracy over FastSLAM
+
+FastSLAM uses particles to estimate the robot's **most likely pose**. However, at any point in time, it's possible that there isn't a particle in the most likely location. The chances are even smaller in larger environments. 
+
+Since GraphSLAM solves the fullSLAM problem, it can work with all of the data at once to find the optimal solution. FastSLAM uses minute amounts of information with a finite number of particles, to leave room for error. 
+
+The following content will introduce:
+
+1. The fundamentals of GraphSLAM 
+2. How to construct Graph 
+3. How to optimize within their constraints to create the most likely set of poses and map. 
+4. How to overcome GraphSLAM's limitations
 
 Graphs 
---
+---
+
+The GraphSLAM algorithm uses graphs to reprsent the robot's poses and the environment. We build a simple graph to further demonstrate how this workds. 
+[image01]
+
+A robot's poses (i.e position and orientation) can be represented by a node at time stamp zero:
+[image002]
+
+
+Usually the first node is arbitrarily constrained to zero, or it's equivalent in greater dimensions. The robot's pose at timestamp one can be represented by another node. The two would be connected by an edge, aka an arc. THis edge is a soft spatial constraint between the tow robot poses. These constraints are called soft because motion and measurenment data is uncertain. The constraints will have some amount of error present.
+
+Soft constraint forms:
+
+1. Motion constraints between two successive robot poses
+2. Measurement constraints between a robt pose and a feature in the environment 
+
+The constraints seen between x_0 and x_1 is a motion constraint. If the robot were to sense it's environment and encounter a feature m_1, a soft measurement constraint would be added.
+
+[image003]
+
+The star represents a feature in the environment. This could be s landmark specifically placed for the purpose of localization and mapping. Or it could be an identifiable element of the environment such as a corner or an edge. The notation chosen here has solid edge to reprsent motion contratints and dsahed edges to represent measurement constraints.
+
+As we saw before, the robot poses are labeled x_1 and x_2 while the features will be labeled m_1 and m_2. As the robot moves around more and more nodes are added to the graph. Over time, the graph constructed by the moile robot becomes very large in size. The graphSLAM algorithm is capable of handling large numbers of features. 
 
 Constraints 
 --
+It is convienent to interpert *soft constraints* as masses connected by rubber bands or springs. When no external forces are acting on them, the springs will naturally bring the system into a configuration, where the forces experienced by all of the springs are minimized.
+
+When the nodes are connected in a linear function as below
+
+[image004[or equation]
+
+the resting configuration is easy to find but the process becomes more challenging as nodes become more and more interconnected. The springs will all try to push or pull the system in their own ways. 
+
+This idea translates well to how constraints work in a graph. Every motion or measurement constraints pulls a system close to that constraint's desired state. Since the measurment and motions are uncertain, constraits will conflict with each other and there will always be some error present. 
+
+The goal is to find the node configuration that minimizes the overall error present in all the constraints. 
+
 
 Front-End vs Back-End 
 --
+The goal of GraphSLAM is to create a graph of all robot poses and features encountered in the environment and find the most likely robot path and map of the environment. 
+
+This task can be broken up into two sections:
+
+1. Front-end 
+2. Back-end
+
+Front-end
+---
+Looks at how to construct the graph using the odometry and sensory measurments collected by the robot. This includes:
+
+1. Interperting sensory data
+2. Creating the graph 
+3. Continuing to add nodes and edges to the grpah as the robot traverses the environment.
+
+The Front-end can be very different depending on application and deired goal
+
+1. Accuracy
+2. Sensor used 
+
+The front-end of a mobile robot applying SLAM in an office using a laser range finder would differe greatly from the front-ednd for a vehicle operationg on a large outdoor environment and using a stereo camera. The front-end of GraphSLAM as the challenge of solving the data association problem. More specifically, this can be best described as accurately indentifying whether features in the environment have been previously seen. 
+
+Back-end
+---
+The back-end is an optimization process that takes all of the constraints and find the system configuration tha produces the smallest error. The back-end is a lot more consistent across applications. The front-end and back-end can be completed in succession or can be performed iteratively, where a back-end is feeding an updated graph to the front-end for further processing. 
 
 Maximum Likelihood Estimation 
 --
+At the core of GraphSLAM is *graph optimization* 
+
+**graph optimization** - the process of minimizing the error present in all of the constraints in the graph. We'll study these constraints in depth and learn to apply a principle called *maximum likelihood estimation* (MLE) to structure and solve the optimization problem for the graph. 
+
+Likelihood
+---
+Likelihood is a complementary principle to probability. Probability tries to estimate the outcomegiven the parameters, while likelihood tries to estimate **the parameters that best explain that outcome. 
+
+When applied to SLAM, likelihood tries to estimate the most likely confiuration of state and feature locations given the motion and measurment observations. 
+
+Feature Measurement Example: 
+---
+A robot is taking repeated measurments of a feature in the environment. The following example will walk us through the steps required to solve it, which can then be applied to more complicated problems. 
+
+The robot's initial pose has a varianve of 0, becuase this is its start location. Recall, whereebver the start location may be, we call it *location 0* in our relative map. Every action pose and measurmenet hereafter will be uncertain. In GraphSLAM, we will make the assumption that motion and measurment data has Gaussian noise. 
+
+The robot takes a measurment of its first feature, m1, and it returns a distance of 1.8 meters. 
+
+If we return to the spring analogy, the 1.8m is the spring's resting length. This is the spring's most desirable length; however it is possible for the spring to be compressed or elongated to accomodate other forces contraints that are acting on the system. 
+
+This probabilty distribution for this measurement can be defined as so: 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" title="p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" /></a>
+
+Put more simply, the probability distribution is highest when z_1 and x_0 are 1.8 meters apart
+[image005]
+
+Since the location of the first pose x_0 is set to 0, this term can be removed from the equation:
+<a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" title="p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}" /></a>
+
+Next, the robot takes another measurement of the same feature in the environment. This time, the data reads 2.2m. Now that there are two conflicting measurements the system is now considered **overdetermined** 
+
+*overdetermined* - as system with more equations than unknowns. 
+
+[image006]
+
+With twoo measurements, the most probable location of the feature can be represented by the product of the two probabilities.
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" title="p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" /></a>
+
+In this simple example it is clear that most likely location of the feature is at the 2.0 meter mark. However, it is valuable to go through the maximum likelihood estimation process to understand the steps entailed, to be able to apply it to more complicated systems. 
+
+To solve this problem analystically, a few steps can be taken to reduce the equations into a simplier form. 
+
+Remove Scaling Factors
+---
+
+The value of m that maximizes the equation does not depend on the constants in front of each of the exponentials. These are scaling factors. In SLAM we are not primarily concerned witht the absolute value of the proabiliteis but finding the maximum likelihood estimate. Thusm these factors can be removed. 
 
 MLE Example 
 --
