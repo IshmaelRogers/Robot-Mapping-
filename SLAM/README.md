@@ -115,6 +115,7 @@ Each of the particles hold the robot's trajectory which will give an advantge to
 In this approach, math features are treated independently, and dependency only exists between the robot pose uncertainity. The aforementioned approach that involves representing the posterior with particle filters and Gaussians is know as the Rao-Blackwellized Particle Filter. 
 
 * **Estimating the Trajectory**: FastSLAM estimates a posterior over the trajectory using a particle filter approach. This will allow SLAM to solve the problem of mapping with known poses. 
+
 * **Estimate the Map** FastSLAM uses a low dimensional Extended Kalman Filter to solve indpenent features of the map whcih are modeled with the local Gaussian. 
 
 FastSLAM Instances 
@@ -527,6 +528,26 @@ The robot starts at an arbitrary location that will be labeled 0, and then proce
 
 After taking its first measurement, the following Gaussian distribution describe the robot's mostly likely location. The distribution is highest when the two poses are 3 meters apart. 
 
+<a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-7)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-7)^2}{\sigma^2}}" title="p(x)=\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}\frac{(z_1-7)^2}{\sigma^2}}" /></a>
+
+Recall that since we constrained the robot's initial location to 0, x_0 can actually be removed from the equation. 
+
+Next, the robot moves forward by what it records to be 10 meters, and takes another measurement of the same feature. This time, the feature is read to be 4 meters behind the robot. The resultant graph looks like this:
+
+[image011]
+
+
+[image012] 
+
+
+Sum of Constraints
+---
+
+The completed graph, with all of its labelled constraints can be seen as follows:
+
+[image013]
+
+The task is to now minimize the sum of all constraints:
 
 
 
