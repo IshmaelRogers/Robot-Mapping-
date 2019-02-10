@@ -430,7 +430,9 @@ To solve this problem analystically, a few steps can be taken to reduce the equa
 Remove Scaling Factors
 ---
 
-The value of m that maximizes the equation does not depend on the constants in front of each of the exponentials. These are scaling factors. In SLAM we are not primarily concerned witht the absolute value of the proabiliteis but finding the maximum likelihood estimate. Thusm these factors can be removed. 
+The value of m that maximizes the equation does not depend on the constants in front of each of the exponentials. These are scaling factors. In SLAM we are not primarily concerned witht the absolute value of the proabiliteis but finding the maximum likelihood estimate. Thus these factors can be removed. 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" title="p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" /></a>
 
 MLE Example 
 --
