@@ -434,8 +434,103 @@ The value of m that maximizes the equation does not depend on the constants in f
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast&space;e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" title="p(x)=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}}\ast e^{-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" /></a>
 
+
+Log-Likelihood
+---
+The product of the probabilities has been simplified so far, but the equation is still prety complicated witht the exponentials present. However, there is a mathematical property that can be applied to conver this product of exponentials into the sum of their exponents.
+
+**Property**
+<a href="https://www.codecogs.com/eqnedit.php?latex=e^ae^b=e^{(a&plus;b)}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?e^ae^b=e^{(a&plus;b)}" title="e^ae^b=e^{(a+b)}" /></a>
+
+**Results** 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=e^{-\frac{1}{2}}\frac{(z_1&space;-&space;1.8)^2}{\sigma^2}&space;*&space;e^{-\frac{1}{2}}\frac{(z_1&space;-&space;2.2)^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?e^{-\frac{1}{2}}\frac{(z_1&space;-&space;1.8)^2}{\sigma^2}&space;*&space;e^{-\frac{1}{2}}\frac{(z_1&space;-&space;2.2)^2}{\sigma^2}" title="e^{-\frac{1}{2}}\frac{(z_1 - 1.8)^2}{\sigma^2} * e^{-\frac{1}{2}}\frac{(z_1 - 2.2)^2}{\sigma^2}" /></a>
+
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" title="e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" /></a>
+
+
+Instead of working with the likelihood, we can take its natural logarithm and work that instead.
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=ln(e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}})" target="_blank"><img src="https://latex.codecogs.com/gif.latex?ln(e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}})" title="ln(e^{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}})" /></a>
+
+<a href="https://www.codecogs.com/eqnedit.php?latex={-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" title="{-\frac{1}{2}\frac{(z_1-1.8)^2}{\sigma^2}-\frac{1}{2}\frac{(z_1-2.2)^2}{\sigma^2}}" /></a>
+
+The natural logarithm is a monotonic function, it is always increasing as can be seen below:
+
+[image007]
+
+When working with logs of likelihoods, always expect a negativ evalue. This is due to the fact that proabbilities assume values between 0 and 1, and the log of any value between 0 and 1 is negative. THis can be seen in the graph above. When working with log-likelihoods, optimization entails minimizing the negative log-likelihood whereas in the past we were trying to maximize likelihood. 
+
+Lastly, the constraints in front of the equation can be removed without consequence. We will assume for this example that the same sensor was used while obtaining both measurments, we can thus ignor the variance in the equation. 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=(z_1-1.8)^2&plus;(z_1-2.2)^2" target="_blank"><img src="https://latex.codecogs.com/gif.latex?(z_1-1.8)^2&plus;(z_1-2.2)^2" title="(z_1-1.8)^2+(z_1-2.2)^2" /></a>
+
+Optimization
+---
+
+The equation has been greatly reduced at this point. To get it to is simpliest formm, we multiply out all of the terms. 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=2z_1^{2}-8z_1&plus;8.08" target="_blank"><img src="https://latex.codecogs.com/gif.latex?2z_1^{2}-8z_1&plus;8.08" title="2z_1^{2}-8z_1+8.08" /></a>
+
+To find the minimum of this equation, we take the first derivative of the equation and set it to equal 0. 
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=4z_1&space;-8&space;=0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?4z_1&space;-8&space;=0" title="4z_1 -8 =0" /></a>
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=4z_1&space;=8" target="_blank"><img src="https://latex.codecogs.com/gif.latex?4z_1&space;=8" title="4z_1 =8" /></a>
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=z_1&space;=2" target="_blank"><img src="https://latex.codecogs.com/gif.latex?z_1&space;=2" title="z_1 =2" /></a>
+
+We are finding the location on the curve where the slope (or gradient, in multi-dimensional equations) is equal to zero i.e the trough.
+
+The property can be visualized easily by looking at a graph of the error function. 
+[image008]
+
+In more complex examples, the curve may be multimodal, or exist over a greater number of dimensions. If the curve is multimodal, it may be unclear whether the locations discovered by the first derivative are in fact troughs, or peaks. In such a cas, the second derivative of the function can be taken, which should clarify whether the local feature is a local minimum or maximum. 
+
+Overview
+---
+
+The procedure we executed here is the *analytical* solution to an MLE problem. The steps include, 
+
+* Removing inconsequential constants 
+* Converting the equation from one of lieklihood estimation to one of *negative log-likelihood estimation*
+* Calculating the first derivative of the function and setting equal to zero to find the extrema. 
+
+In GraphSLAM, the first two steps can be applied to *every* constraint. Thus any measurement or motion constraint can besimmply labelled with is negative log-likelihood error. For a measurment constraint, this would resemble the following:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\frac{(z_t-(x_t&plus;m_t))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{(z_t-(x_t&plus;m_t))^2}{\sigma^2}" title="\frac{(z_t-(x_t+m_t))^2}{\sigma^2}" /></a>
+
+For the motion constraint:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}" title="\frac{(x_t-(x_{t-1}+u_t))^2}{\sigma^2}" /></a>
+
+From now on, constraints will be labelled with their negative log-likelihood error, with the estimation function trying to minimize the sum of all constraints.
+
+[image009] 
+
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=J_{GraphSLAM}=\sum_{t}\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}&space;&plus;\sum_{t}\frac{(z_t-(x_{t}&plus;m_t))^2}{\sigma^2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?J_{GraphSLAM}=\sum_{t}\frac{(x_t-(x_{t-1}&plus;u_t))^2}{\sigma^2}&space;&plus;\sum_{t}\frac{(z_t-(x_{t}&plus;m_t))^2}{\sigma^2}" title="J_{GraphSLAM}=\sum_{t}\frac{(x_t-(x_{t-1}+u_t))^2}{\sigma^2} +\sum_{t}\frac{(z_t-(x_{t}+m_t))^2}{\sigma^2}" /></a>
+
 MLE Example 
 --
+
+In the previous example we looked at a robot taking repeated measurment of the same feature in the environment. This example demonstrates the fundamentals of maximum likelihood estimation, bbut was extremly limited since it was only estimating one parameter - *z_1*
+
+In this example, we have the opportunity to get hands-on with a more complicated 1-dimensional estimation problem. 
+
+Motion and Measurement Example
+---
+The robot starts at an arbitrary location that will be labeled 0, and then proceeds to measure a feature in front of it - the sensor reads that the feature is 7 meters way. The resultant graph is shown in the image below. 
+
+[image010]
+
+After taking its first measurement, the following Gaussian distribution describe the robot's mostly likely location. The distribution is highest when the two poses are 3 meters apart. 
+
+
+
+
+
 
 Numerical Solution to MLE 
 --
