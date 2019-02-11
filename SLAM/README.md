@@ -807,11 +807,96 @@ Intro to 3D SLAM with RTAB-Map
 3D SLAM with RTAB-Map 
 --
 
+We now discus the front-end and back-end for RTAB-Map. The front-end of RTAB-Map focuses on sensor data used to obtain the constraints that are used for feature optimizaion approaches. Although landmark constraints are used for other graphs, SLAM methods like the 3D graph SLAM method discussed earlier, are not used in RTAB-Map. 
+
+Only odometry constraints and loop-closure constraints are considered here. The odometry constraints can come from wheel encoders, IMU, LIDAR, or visual odometry. 
+
+Visual Odmotery is accomplished using 2D features such as Speed Up Robus Features (SURF). RTAB-Map is appearance based with no metric distance information. RTAB-Map can use a single monocular camera to detect loop closure. 
+
+For metric graph SLAM, RTAB-Map requires an RGB-D camera or a stereo camera to compute the geometric constraints between the images of a loop closure. A laser range finder can also be used to improve or refine this geometric constraint by providing a more precise localization. 
+
+The front-end also involves graph management, which includes node creation and loop closure detection using bag-of-words. 
+
+The back-end of RTAP=Map includes graph optimization, an assembly of an occupancy grid from te data of the graph. 
+
+Loop-Closures
+--
+
+Loop closure detection is the process of finding a match between the current and previously visited locations in SLAM. There are two types of loop closure detection: local and global. Many probabilistics SLAM methods use local loop closure detection where matches are found between a new obervation and a limited map region. 
+
+The size and location of this limited map region is determined by theuncertainty associated witht the robot's positio. This type of approach fails if the estimated position is incorrect. Recall, it is likely that the events in the real world that the robot is operating in will cause errors in the estimated position. 
+
+Global Loop-Closure
+--
+
+A new location is compared with previously viewed locations. If no match is found, the new lcation is added to memory. As the map grows and more locations are added, the amount of time to check whether the location has been previously seen increases linearly.
+
+If the time it takes to search and compare new images to the one stored in memory becomes larger thatn the acquisition time, the map becomes ineffective. 
+
+RTAB-Map uses a global loop closure approach combined with other techniques to ensure that the loop closure process happens in real time. As can be seen belwo the overall map output is significiantly improved with loop closure detect. 
+
+
 Visual Bag-of-Words 
 --
 
+In RTAB-Mapping loop-closure is detected using a bag-of-words approach. Bag-of words is commonly used in vision-based mapping. A feature is a very specific characteristics of an image like a patch with a complex texture, or a well-defined edge or corner. Also, the default method for extracting features from an image is called Speeded Up Robust Features, 
+
+Each feature has a descriptor associated with it. A feature descriptor is a unique and robust representation of the pixels that make up a feature. In SURF, the point of interest where the feature is located is split into smaller square sub-regions. From these sub-regions, the pixel intensities in regions of regularly space sample points are calculated compared.
+
+The differences between the sample points are used to categorize the sub-regions of the image. However comparing feature descriptors directly is time consuming. 
+
+Vocabulary
+---
+Is used for much faster comparison. Similare features, or synonyms, are clustered together. The collection of these clusters represent the vocabulary. When a feauture descriptors is mapped to one of the vocabulary it is called quantization. 
+
+From here, the feature is now linked to a word and can be referred to as a visual word. When all features in an image are quantized, the image is now a *bag of words*. Each word keeps a link to images that it is associated with, thus making image retrieval more efficient overa large data set. To compare an image with our previous images, a matching score is given to all images containing the same words. Each word keeps track of which image it have been seen in, so that similar images can be found i.e *inverted index*
+
+If a word is seen in an image the score of this image will increase. If an image shares many visual words witht the query image, it will score higher. A Bayesian filter is used to evaluate the scores. This is the hypothesis that an images has been seen before. 
+
+When the hypothesis reaches a predefined threshold H, a loop closure is detected. 
+
 RTAB-Map Memory Management 
 --
+RTAB-Mapping uses a memory management technique to limit the number of locations considered as candidates during loop-closure detection. The strategy is to keep the most recent and frequently oberved locations in the robot's working memory (WM) and transfer the others into a long-term memory or LTM. When a new imag is aquired, a new node is created in the Short-Term Memormy or STM.
+
+When creating a node, recall that features are extracted and compared to the vocabulary to find all of the words in the image, creating a bag of words for this node. The STM has a fixed size of S, and nodes in the STM are not considered during loop-closure detection because they are generally very similare to one another. 
+
+When STM reaches S nodes, the oldest node is moved to WM to be considered for loop closure detection. Therefore, the WM is where the loop-clousre takes place. We now discus what else determines which nodes make it to WM for consideration. 
+
+In STM, there is a weight update step.The heuristic is based on the fact that the robot should remember areas where it has spent most of its time in. The longer the robot spends in the location, the larger the weight of that node. If two consecutive areas are similar, the weight of the first node is increased by one, an no new node is created for the second image. 
+
+The compromise made between search time and space is driven ultimately by the environment and the experience the robot has. WM size depends on the fixed time limit, t.
+
+When the time required to process new data reaches, t, some nodes of the graph are transferred from WM to LTM. As a result, WM size's are kept nearly constant. Oldest and less weighted nodes in WM are transferred to LTM before others. WM is made up of nodes seen for a longer period of time. LTM is not used for loop-clourse detection  and graph optimization. 
+
+If loop closure is deteted, neighbors in the LTM of an old node can be transferred back to the WM, in a process called retrieval.
+
+[image016]
+
 
 RTAB-Map Optimization and Output 
 --
+Now we will discuss graph and map optimization as well as time complexity considerations. 
+
+Graph Optimization
+---
+When a loop closure hypothesis is accepted, a new constraint is added to the map's graph, then a graph optimizer minimizes the errors in the map. RTAB-Map supports 3 different graph optimizations: 
+
+1. Tree-Based Network Optimizer (TORO)
+2. General Graph Optimization (G2O)
+3. GTSAM (Smothing and Mapping)
+
+All of these optimizations use node poses and link transformations as constraints. When a loop closure is detected, errors introduced by the odometry can be propagated to all links, thereby correcting the map. Recall that Landmarks are used in the graph optimization process for other methods, whereas RTAB-Map does not use them. Only odometry constraints and loop-closure constraints are optimized.
+
+Map assembly and Output
+---
+The possible outputs of RTAB-Map are:
+
+1. 2D Occupancy Grid Map
+2. 3D Occupancy Grid Map (3D octomap)
+3. 3D Point Cloud 
+
+GraphSLAM Complexity and Complexity of RTAB-Map
+---
+
+Graph-SLAM complexity is linear, according to the number of nodes, which increases according to the size of the map. By providign constraints associated with how many nodes are processed for loop closure by memory management, the time complexity becomes constant in RTAB-Map. 
